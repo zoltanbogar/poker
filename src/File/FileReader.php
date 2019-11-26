@@ -2,12 +2,14 @@
 
 namespace AzerionAssignment\File;
 
+use function is_dir;
+
 class FileReader {
   private $input_array = [];
 
   public function readInput($input_file) : array {
     try {
-      if(!is_readable($input_file)){
+      if(!is_readable($input_file) || is_dir($input_file)){
         throw new \Exception("File cannot be opened!");
       }
 
