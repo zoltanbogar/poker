@@ -19,6 +19,11 @@ if(!is_readable($filepath)){
   exit;
 }
 //fclose($handle);
+try{
+    $index = new Engine($filepath, 'poker');
+    $result = $index->run();
 
-$index = new Engine($filepath);
-$index->run();
+    var_dump($result);
+} catch (\Exception $e) {
+    var_dump($e->getMessage());
+}
