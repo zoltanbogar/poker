@@ -26,4 +26,8 @@ class Card implements CardInterface {
   public function toString(): string {
     return "Suit: {$this->getSuit()}, and rank: {$this->getRank()}";
   }
+
+  public function getCardArray(): array {
+    return [$this->suit, $this->rank];
+  }
 }

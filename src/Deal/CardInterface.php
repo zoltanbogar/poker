@@ -8,4 +8,5 @@ interface CardInterface {
   public function getSuit() : string;
   public function getRank() : string;
   public function toString() : string;
+  public function getCardArray() : array;
 }

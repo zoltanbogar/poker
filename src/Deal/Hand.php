@@ -25,4 +25,12 @@ class Hand implements HandInterface {
 
     return $string . "in your hand.";
   }
+
+  public function getHandArray(): array {
+    $result = [];
+    foreach($this->card_array as $card){
+      $result[] = $card->getCardArray();
+    }
+    return $result;
+  }
 }

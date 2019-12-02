@@ -7,4 +7,5 @@ interface HandInterface {
   public function getHand() : HandInterface;
   public function getCards() : array;
   public function toString() : string;
+  public function getHandArray() : array;
 }
