@@ -7,6 +7,7 @@ use function array_keys;
 use function array_search;
 use function array_sum;
 use function in_array;
+use function method_exists;
 use function var_dump;
 
 class Evaluation
@@ -50,8 +51,6 @@ class Evaluation
             'high card' => 10,
         ];
 
-        $rank = 10;
-
         if ($this->isRoyalFlush($hand)) {
             $rank = 1;
             $this->orderHand($hand, $rank);
@@ -79,9 +78,10 @@ class Evaluation
         } else if ($this->isPair($hand)) {
             $rank = 9;
             $this->orderHand($hand, $rank);
+        } else {
+          $rank = 10;
+          $this->orderHand($hand, $rank);
         }
-
-        $this->sorted_hands[$rank][] = $hand;
     }
 
     public function compareHands($hand1, $hand2, $rank, $i)
@@ -120,7 +120,10 @@ class Evaluation
     private function compareSameRanks($hand1, $hand2, $rank, $i, $number_of_cards){
         //var_dump(array_search($number_of_cards, $this->createRankDistribution($hand1)) , array_search($number_of_cards, $this->createRankDistribution($hand2)));
         if(array_search($number_of_cards, $this->createRankDistribution($hand1)) > array_search($number_of_cards, $this->createRankDistribution($hand2))) {
+          //var_dump($this->sorted_hands[$rank]);
             array_splice($this->sorted_hands[$rank], $i, 0, $hand1);
+          //var_dump($this->sorted_hands[$rank]);
+          //die("foo");
         }
     }
 
@@ -147,17 +150,17 @@ class Evaluation
 
     private function orderHand($hand, $rank): void
     {
-
-
         if ($rank === 1 || !isset($this->sorted_hands[$rank]) || empty($this->sorted_hands[$rank])) {
+          //if($rank == 3) var_dump($this->sorted_hands[$rank]);
             $this->sorted_hands[$rank][] = $hand;
-            if($rank == 3) var_dump("1x",count($this->sorted_hands[$rank]));
+          //if($rank == 3) var_dump($this->sorted_hands[$rank]);
+            //if($rank == 3) var_dump("1x",count($this->sorted_hands[$rank]));
         } else {
 
-            if($rank == 3) var_dump("hánysz0r",count($this->sorted_hands[$rank]));
+            //if($rank == 3) var_dump("hánysz0r",count($this->sorted_hands[$rank]));
             $count = count($this->sorted_hands[$rank]);
             for ($i = 0; $i < $count; $i++) {
-                if($rank == 3) var_dump($i . " - " . count($this->sorted_hands[$rank]));
+                //if($rank == 3) var_dump($this->sorted_hands[$rank][$i]);
                 $this->compareHands($hand, $this->sorted_hands[$rank][$i], $rank, $i);
             }
         }
@@ -284,15 +287,30 @@ class Evaluation
 
     public function getResult()
     {
-        $result = [];
-        foreach($this->sorted_hands as $hands_by_ranking){
+        $result = []; //array print
+        $result_string = ""; //string print
+        ksort($this->sorted_hands); //string print
+        foreach($this->sorted_hands as $rank => $hands_by_ranking){
+          //$index = 0; //array print
             foreach($hands_by_ranking as $key => $hand){
-                //var_dump($hand);
-                foreach($hand->getCards() as $card){
-                    $result[$key][] = $card->getRank().$card->getSuit();
+              if(!method_exists($hand, "getCards")){
+                foreach($hand as $card){
+                  $result_string .= $card->getRank().$card->getSuit() . " "; //string print
+                  //$result[$rank][$index][] = $card->getRank().$card->getSuit(); //array print
                 }
+              } else {
+                foreach($hand->getCards() as $card){
+                  $result_string .= $card->getRank().$card->getSuit() . " "; //string print
+                  //$result[$rank][$index][] = $card->getRank().$card->getSuit(); //array print
+                }
+              }
+              //$index++; //array print
+              $result_string .= "\n"; //string print
             }
         }
-        return $result;
+        //ksort($result); //array print
+
+        //return $result; //array print
+      return $result_string; //string print
     }
 }

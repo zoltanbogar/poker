@@ -23,7 +23,7 @@ try{
     $index = new Engine($filepath, 'poker');
     $result = $index->run();
 
-    var_dump($result);
+    print_r($result);
 } catch (\Exception $e) {
     var_dump($e->getMessage());
 }
