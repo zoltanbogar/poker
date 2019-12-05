@@ -37,7 +37,7 @@ class Engine
         if (!empty($this->input_array)) {
             $file_content_validator = new FileContentValidator();
             if ($file_content_validator->validateArray($this->input_array)) {
-                new DeckValidator($this->deck, $this->input_array);
+                //new DeckValidator($this->deck, $this->input_array);
                 $this->createDealing();
 
                 $result = new Evaluation($this->dealing, $this->game_type);

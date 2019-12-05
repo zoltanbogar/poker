@@ -3,6 +3,9 @@
 namespace AzerionAssignment\Deal;
 
 use AzerionAssignment\Util;
+use function ctype_digit;
+use function in_array;
+use function is_array;
 
 class Evaluation {
   private $dealing;
@@ -59,7 +62,7 @@ class Evaluation {
       $this->orderHand($hand, $rank);
     } elseif ($this->isTwoPairs($hand)) {
       $rank = 8;
-      $this->sorted_hands[$rank][] = $hand;
+      $this->orderHand($hand, $rank);
     } elseif ($this->isPair($hand)) {
       $rank = 9;
       $this->orderHand($hand, $rank);
@@ -73,23 +76,21 @@ class Evaluation {
     switch ($rank) {
       case 2:
       case 6:
-        $this->compareStraights($hand1, $hand2, $rank, $i);
-        break;
+        return $this->compareStraights($hand1, $hand2, $rank, $i);
       case 5:
-        $this->compareFlushes($hand1, $hand2, $rank, $i);
-        break;
+        return $this->compareFlushes($hand1, $hand2, $rank, $i);
       case 3:
-        $this->compareSameRanks($hand1, $hand2, $rank, $i, 4);
-        break;
+        return $this->compareSameRanks($hand1, $hand2, $rank, $i, 4);
       case 7:
-        $this->compareSameRanks($hand1, $hand2, $rank, $i, 3);
-        break;
+        return $this->compareSameRanks($hand1, $hand2, $rank, $i, 3);
       case 9:
-        $this->compareSameRanks($hand1, $hand2, $rank, $i, 2);
-        break;
+        return $this->compareSameRanks($hand1, $hand2, $rank, $i, 2);
       case 4:
-        $this->compareSameRanks($hand1, $hand2, $rank, $i, 3);
-        break;
+        return $this->compareSameRanks($hand1, $hand2, $rank, $i, 3);
+      case 8:
+        return $this->compareTwoPairs($hand1, $hand2, $rank, $i, 2);
+      default:
+        return $this->compareHighCards($hand1, $hand2, $rank, $i, 1);
     }
   }
 
@@ -100,25 +101,87 @@ class Evaluation {
       throw new \Exception('Config not found');
     }
 
-    return $rank_value_array[$rank];
+    return $rank_value_array[$this->game_type][$rank];
   }
 
-  /*public function compareFullHouses($hand1, $hand2, $rank, $i) {
-    if (array_search(3, $this->createRankDistribution($hand1)) > array_search(3, $this->createRankDistribution($hand2))) {
-      array_splice($this->sorted_hands[$rank], $i, 0, $hand1);
+  public function compareHighCards($hand1, $hand2, $rank, $i, $number_of_cards){
+    $hand1_cards = array_keys($this->createRankDistribution($hand1),$number_of_cards);
+    $hand2_cards = array_keys($this->createRankDistribution($hand2),$number_of_cards);
+    rsort($hand1_cards);
+    rsort($hand2_cards);
+
+    for($j = 0; $j < count($hand1_cards); $j++) {
+      if($hand1_cards[$j] > $hand2_cards[$j]) {
+        $this->pushAndReindex($rank, $i, $hand1);
+        return true;
+      }
     }
-  }*/
+
+    return false;
+  }
+
+  public function compareTwoPairs($hand1, $hand2, $rank, $i, $number_of_cards):bool{
+    $hand1_cards = array_keys($this->createRankDistribution($hand1),$number_of_cards);
+    $hand2_cards = array_keys($this->createRankDistribution($hand2),$number_of_cards);
+    if(max($hand1_cards) > max($hand2_cards) || (max($hand1_cards) == max($hand2_cards) && min($hand1_cards) > min($hand2_cards))){
+      $this->pushAndReindex($rank, $i, $hand1);
+      return true;
+    } else if(max($hand1_cards) == max($hand2_cards) && min($hand1_cards) == min($hand2_cards)) {
+      $hand1_kicker = array_search(1, $this->createRankDistribution($hand1));
+      $hand2_kicker = array_search(1, $this->createRankDistribution($hand2));
+
+      if($hand1_kicker > $hand2_kicker) {
+        $this->pushAndReindex($rank, $i, $hand1);
+        return true;
+      }
+
+      return false;
+    }
+
+    return false;
+  }
+
+  private function pushAndReindex($rank, $i, $new_hand){
+    $result = [];
+    foreach($this->sorted_hands[$rank] as $key => $hand){
+      if($key === $i) {
+        $result[$i] = $new_hand;
+      }
+        $result[] = $hand;
+    }
+    $this->sorted_hands[$rank] = $result;
+  }
 
   private function compareSameRanks($hand1, $hand2, $rank, $i, $number_of_cards) {
-    if (array_search($number_of_cards, $this->createRankDistribution($hand1)) > array_search($number_of_cards, $this->createRankDistribution($hand2))) {
-      array_splice($this->sorted_hands[$rank], $i, 0, $hand1);
+    $hand1_poker = array_search($number_of_cards, $this->createRankDistribution($hand1));
+    $hand2_poker = array_search($number_of_cards, $this->createRankDistribution($hand2));
+    if ($hand1_poker > $hand2_poker) {
+      $this->pushAndReindex($rank, $i, $hand1);
+      return true;
+    } else if($hand1_poker == $hand2_poker) {
+      $hand1_kicker = array_search(1, $this->createRankDistribution($hand1));
+      $hand2_kicker = array_search(1, $this->createRankDistribution($hand2));
+
+      if($hand1_kicker > $hand2_kicker) {
+        $this->pushAndReindex($rank, $i, $hand1);
+        return true;
+      }
     }
+
+    return false;
   }
 
   private function compareStraights($hand1, $hand2, $rank, $i) {
-    if (max($this->createCardArray($hand1)) > max($this->createCardArray($hand2))) {
-      array_splice($this->sorted_hands[$rank], $i, 0, $hand1);
+    $card_rank_array1 = $this->createCardArray($hand1);
+    $card_rank_array1 = $this->adjustRankInArray($card_rank_array1);
+    $card_rank_array2 = $this->createCardArray($hand2);
+    $card_rank_array2 = $this->adjustRankInArray($card_rank_array2);
+
+    if (max($card_rank_array1) > max($card_rank_array2)) {
+      $this->pushAndReindex($rank, $i, $hand1);
+      return true;
     }
+    return false;
   }
 
   private function compareFlushes($hand1, $hand2, $rank, $i) {
@@ -129,18 +192,25 @@ class Evaluation {
 
     for ($j = 0; $j < count($card_array_1); $j++) {
       if ($card_array_1[$j] > $card_array_2[$j]) {
-        array_splice($this->sorted_hands[$rank], $i, 0, $hand1);
+        $this->pushAndReindex($rank, $i, $hand1);
+        return true;
       }
     }
+    return false;
   }
 
   private function orderHand($hand, $rank): void {
     if ($rank === 1 || !isset($this->sorted_hands[$rank]) || empty($this->sorted_hands[$rank])) {
       $this->sorted_hands[$rank][] = $hand;
     } else {
+      $is_added = false;
       $count = count($this->sorted_hands[$rank]);
       for ($i = 0; $i < $count; $i++) {
-        $this->compareHands($hand, $this->sorted_hands[$rank][$i], $rank, $i);
+        $is_added = $this->compareHands($hand, $this->sorted_hands[$rank][$i], $rank, $i);
+        if($is_added) break;
+      }
+      if(!$is_added){
+        $this->sorted_hands[$rank][] = $hand;
       }
     }
   }
@@ -175,11 +245,45 @@ class Evaluation {
     $sum = array_sum($card_rank_array);
     $median = $sum / count($card_rank_array);
 
+    if(floor($median) != $median) {
+      $has_ace =  in_array("A", $card_rank_array);
+      $original_card_rank_array = $card_rank_array;
+
+      $card_rank_array = $this->adjustRankInArray($card_rank_array);
+      $sum = array_sum($card_rank_array);
+      $median = $sum / count($card_rank_array);
+
+      if($has_ace && floor($median) != $median) {
+        $card_rank_array = array_replace($original_card_rank_array,
+          array_fill_keys(
+            array_keys($original_card_rank_array, "A"),
+            "A_low"
+          )
+        );
+        $card_rank_array = $this->adjustRankInArray($card_rank_array);
+        $sum = array_sum($card_rank_array);
+        $median = $sum / count($card_rank_array);
+      }
+    }
+
     if (!array_diff($card_rank_array, [$median - 2, $median - 1, $median, $median + 1, $median + 2])) {
       return TRUE;
     }
 
     return FALSE;
+  }
+
+  public function adjustRankInArray($card_rank_array){
+    $result = [];
+    foreach($card_rank_array as $rank){
+      //var_dump($rank, $this->getRankValue($rank));
+      if($rank == $this->getRankValue($rank)) {
+        $result[] = $rank;
+      } else {
+        $result[] = $this->getRankValue($rank);
+      }
+    }
+return $result;
   }
 
   public function isFlush($hand): bool {
