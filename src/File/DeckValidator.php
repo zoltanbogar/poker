@@ -4,12 +4,27 @@ namespace AzerionAssignment\File;
 
 use AzerionAssignment\Deal\Card;
 use AzerionAssignment\Deal\Deck;
+use AzerionAssignment\Exception\InvalidDealException;
 
+/**
+ * Class DeckValidator
+ *
+ * @package AzerionAssignment\File
+ */
 class DeckValidator
 {
-    private $deck;
-    private $input_array;
-    private $card_validator;
+  /**
+   * @var \AzerionAssignment\Deal\Deck
+   */
+  private $deck;
+  /**
+   * @var
+   */
+  private $input_array;
+  /**
+   * @var \AzerionAssignment\File\CardValidator
+   */
+  private $card_validator;
 
     public function __construct(Deck $deck, $input_array)
     {
@@ -20,7 +35,13 @@ class DeckValidator
         $this->validateDeck();
     }
 
-    private function validateDeck()
+  /**
+   * @throws \AzerionAssignment\Exception\IncorrectCardFormatException
+   * @throws \AzerionAssignment\Exception\IncorrectRankException
+   * @throws \AzerionAssignment\Exception\IncorrectSuitException
+   * @throws \AzerionAssignment\Exception\InvalidDealException
+   */
+  private function validateDeck()
     {
         foreach($this->input_array as $hand){
             $hand_array = explode(" ", $hand);
@@ -36,7 +57,7 @@ class DeckValidator
 
                         $created_card = new Card($suit, $rank);
                         if(!$this->deck->removeCard($created_card)){
-                            throw new \Exception("Invalid deal!");
+                            throw new InvalidDealException();
                         }
                     }
                 }

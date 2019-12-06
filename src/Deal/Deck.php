@@ -2,65 +2,94 @@
 
 namespace AzerionAssignment\Deal;
 
+use AzerionAssignment\Exception\ConfigNotFoundException;
 use AzerionAssignment\Util;
 
-class Deck implements DeckInterface
-{
-    private $array_cards;
-    private $deck_type;
+/**
+ * Class Deck
+ *
+ * @package AzerionAssignment\Deal
+ */
+class Deck implements DeckInterface {
+  /**
+   * @var
+   */
+  private $array_cards;
+  /**
+   * @var
+   */
+  private $deck_type;
 
-    public function __construct($deck_type)
-    {
-        $this->deck_type = $deck_type;
-        $this->createDeck();
-    }
+  /**
+   * Deck constructor.
+   *
+   * @param $deck_type
+   *
+   * @throws \AzerionAssignment\Exception\ConfigNotFoundException
+   */
+  public function __construct($deck_type) {
+    $this->deck_type = $deck_type;
+    $this->createDeck();
+  }
 
-    public function createDeck(): void
-    {
-        if($deck_config = Util::createPlatformIndependentPath(__DIR__ . "/../../config/Deck.php")) {
-            $deck_array = include $deck_config;
+  /**
+   * @throws \AzerionAssignment\Exception\ConfigNotFoundException
+   */
+  public function createDeck(): void {
+    $deck_config = Util::createPlatformIndependentPath(__DIR__ . "/../../config/RankValue.php");
+    if (file_exists($deck_config)) {
+      $deck_array = include $deck_config;
 
-            if($deck_array[$this->deck_type]) {
-                $rank_array = ["A", "K", "Q", "J", "10", "9", "8", "7", "6", "5", "4", "3", "2"];
+      if ($deck_array[$this->deck_type]) {
+        $rank_array = ["A", "K", "Q", "J", "10", "9", "8", "7", "6", "5", "4", "3", "2"];
 
-                foreach($deck_array[$this->deck_type] as $card){
-                    foreach ($rank_array as $rank) {
-                        if (strpos($card, $rank) !== FALSE) {
-                            $suit = str_replace($rank, "", $card);
+        foreach ($deck_array[$this->deck_type] as $card) {
+          foreach ($rank_array as $rank) {
+            if (strpos($card, $rank) !== FALSE) {
+              $suit = str_replace($rank, "", $card);
 
-                            $card = new Card($suit, $rank);
-                            $this->addCard($card);
+              $card = new Card($suit, $rank);
+              $this->addCard($card);
 
-                            break;
-                        }
-                    }
-                }
+              break;
             }
+          }
         }
+      }
+    } else {
+      throw new ConfigNotFoundException();
+    }
+  }
+
+  /**
+   * @param \AzerionAssignment\Deal\Card $card
+   *
+   * @return bool
+   */
+  public function removeCard(Card $card): bool {
+    foreach ($this->array_cards as $key => $card_object) {
+      if ($card->getRank() === $card_object->getRank() && $card->getSuit() === $card_object->getSuit()) {
+        unset($this->array_cards[$key]);
+
+        return TRUE;
+      }
     }
 
-    public function removeCard(Card $card): bool
-    {
-        foreach($this->array_cards as $key => $card_object) {
-            if($card->getRank() === $card_object->getRank() && $card->getSuit() === $card_object->getSuit()){
-                unset($this->array_cards[$key]);
+    return FALSE;
+  }
 
-                return true;
-            }
-        }
+  /**
+   * @param \AzerionAssignment\Deal\Card $card
+   */
+  public function addCard(Card $card): void {
+    $this->array_cards[] = $card;
+  }
 
-        return false;
-    }
-
-    public function addCard(Card $card): void
-    {
-        $this->array_cards[] = $card;
-    }
-
-    public function getCards(): array
-    {
-        return $this->array_cards;
-    }
-
+  /**
+   * @return array
+   */
+  public function getCards(): array {
+    return $this->array_cards;
+  }
 
 }

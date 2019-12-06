@@ -2,15 +2,28 @@
 
 namespace AzerionAssignment\File;
 
-use function is_dir;
+use AzerionAssignment\Exception\FileCannotBeOpenedException;
 
+/**
+ * Class FileReader
+ *
+ * @package AzerionAssignment\File
+ */
 class FileReader {
+  /**
+   * @var array
+   */
   private $input_array = [];
 
+  /**
+   * @param $input_file
+   *
+   * @return array
+   */
   public function readInput($input_file) : array {
     try {
       if(!is_readable($input_file) || is_dir($input_file)){
-        throw new \Exception("File cannot be opened!");
+        throw new FileCannotBeOpenedException();
       }
 
       $handle = fopen($input_file, "r");

@@ -2,9 +2,19 @@
 
 namespace AzerionAssignment;
 
+/**
+ * Class Util
+ *
+ * @package AzerionAssignment
+ */
 class Util
 {
-    public static function createPlatformIndependentPath($path){
+  /**
+   * @param $path
+   *
+   * @return mixed
+   */
+  public static function createPlatformIndependentPath($path){
         return str_replace(["\"", "/"], DIRECTORY_SEPARATOR, $path);
     }
 }

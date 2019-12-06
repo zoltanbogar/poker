@@ -1,48 +1,42 @@
-# Composer - Include Files Plugin
+# Poker hands ranker
 
-When using the Composer Autoloader if you need project files included prior to files autoloaded by any of your dependencies your out of luck. No longer!
+Written in php as an assignment to Azerion.
 
 ## Installation
-
+In the root folder
 ```bash
-composer require 0.0.0/composer-include-files
+composer install
 ```
 
 ## Usage
 
-Just add the files you need included using `"include_files"` and they will be include prior to any files included by your dependencies.
+In the root folder type
+```bash
+php index.php
+```
+After the prompt appears, the path to the input file should be given.
+By default it is in the sample folder and the name of the file is input.txt
 
-```json
-// composer.json (project)
-{
-    "extra": {
-        "include_files": [
-            "/path/to/file/you/want/to/include",
-            "/path/to/another/file/you/want/to/include"
-        ]
-    },
-}
+```bash
+sample/input.txt
 ```
 
-## Specific Use Case
-
-A good example of where this is required is when overriding helpers provided by Laravel.
-
-In the past simply modifying `bootstrap/autoload.php` to include helpers was sufficient. However new versions of PHPUnit include the Composer Autoloader prior to executing the PHPUnit bootstrap file. Consequently this method of overriding helpers is no longer viable as it will trigger a fatal error when your bootstrap file is included.
-
-But now we can use *Composer - Include Files Plugin* to have Composer include the files in the necessary order.
-
-```json
-// composer.json (project)
-{
-    "require": {
-        "laravel/framework": "^5.2",
-        "funkjedi/composer-include-files": "^1.0",
-    },
-    "extra": {
-        "include_files": [
-            "app/helpers.php"
-        ]
-    },
-}
+The content of the input should be something like this:
+```bash
+A♥ 2♦ 3♠ 4♣ 5♦
+4♠ J♠ 8♠ 2♠ 9♠
+3♦ J♣ 8♠ 4♥ 2♠
+7♣ 7♦ 7♠ K♣ 3♦
+A♥ A♦ 8♣ 4♠ 7♥
+J♥ J♦ J♠ J♣ 7♦
+8♣ 7♣ 6♣ 5♣ 4♣
+9♣ 8♦ 7♠ 6♦ 5♥
+4♣ 4♠ 3♣ 3♦ Q♣
+A♦ K♦ Q♦ J♦ 10♦
 ```
+In one line 5 cards should be added, each with it's rank first, then it's suit second without any spaces. Between the cards should be one space.
+
+The process starts in the Engine.php  
+The input gets validated, then the program creates the Cards, Hands and the Deal.  
+In the deal the hands have ranks, and they are compared to each other then placed in the correct order.  
+At the end of the process, the result gets printed.
